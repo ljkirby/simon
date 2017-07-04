@@ -1,5 +1,9 @@
 var KEYS = ['c', 'd', 'e', 'f'];
 var NOTE_DURATION = 1000;
+var lastClickTime = 0;
+var noteSequence = [];
+var clickTimes = [0];
+var delayBeforeEcho = 2500;
 
 // NoteBox
 //
@@ -32,7 +36,7 @@ function NoteBox(key, onClick) {
 		// Set active class for NOTE_DURATION time
 		boxEl.classList.add('active');
 		setTimeout(function () {
-			playing--
+			playing--;
 			if (!playing) {
 				boxEl.classList.remove('active');
 			}
@@ -49,12 +53,21 @@ function NoteBox(key, onClick) {
 		enabled = false;
 	}
 
+	//sets the box to echo sound if clicked
+	// this.echo = function() {
+	// 	if(new Date() - lastClickTime > 2500) this.play();
+	// 	else setTimeout(this.echo, 5);
+	// }.bind(this)
+
 	// Call this NoteBox's clickHandler and play the note.
 	this.clickHandler = function () {
 		if (!enabled) return;
 
-		this.onClick(this.key)
-		this.play()
+		this.onClick(this.key);
+        this.play();
+		lastClickTime = new Date();
+        clickTimes.push(lastClickTime);
+		noteSequence.push(this.key);
 	}.bind(this)
 
 	boxEl.addEventListener('mousedown', this.clickHandler);
@@ -71,6 +84,59 @@ KEYS.forEach(function (key) {
 	notes[key] = new NoteBox(key);
 });
 
-KEYS.concat(KEYS.slice().reverse()).forEach(function(key, i) {
-	setTimeout(notes[key].play.bind(null, key), i * NOTE_DURATION);
-});
+function disableAllNoteboxes() {
+    KEYS.forEach(function (key) {
+        notes[key].disable();
+    });
+}
+
+function enableAllNoteboxes() {
+    KEYS.forEach(function (key) {
+        notes[key].enable();
+    });
+}
+
+/*
+This function 'echoes' a clicked note
+after a 2500 ms delay. If the user plays multiple
+notes within 2500 ms, the program will wait until the user stops clicking for
+at least 2500 ms,and then will echo the sequence they played.
+
+@param: none
+@returns: none
+ */
+function echo() {
+
+	//waits until 2.5 seconds have passed since user's last click
+    if(new Date() - lastClickTime > delayBeforeEcho && lastClickTime != 0) {
+		disableAllNoteboxes();
+    	var playSequence = function(){
+
+    		if(noteSequence == undefined || noteSequence.length == 0){
+                lastClickTime = 0;
+                clickTimes = [];
+                clickTimes.push(lastClickTime);
+                enableAllNoteboxes();
+                echo();
+			}
+			else{
+                var currentNote  = noteSequence.shift();
+                clickTimes.shift();
+                notes[currentNote].play();
+                setTimeout(playSequence, clickTimes[1] - clickTimes[0]);
+			}
+
+		}
+		playSequence();
+	}
+
+	//if 2.5 seconds has not passed since last click, keep waiting
+    else setTimeout(echo, 5);
+}
+
+echo();
+
+//
+// KEYS.concat(KEYS.slice().reverse()).forEach(function(key, i) {
+// 	setTimeout(notes[key].play.bind(null, key), i * NOTE_DURATION);
+// });
