@@ -1,21 +1,52 @@
 
 //functionality settings
-var echoEnabled = false;
-var simonEnabled = true;
+var echoEnabled;
+var echoCalled = false;
+var simonEnabled;
 
 var KEYS = ['c', 'd', 'e', 'f'];
-var NOTE_DURATION = 1000;
+var NOTE_DURATION = 700;
 
 //echo functionality variables
-var delayBeforeEchoesStart = 2500;
+var DELAY_BEFORE_ECHO = 2500;
 var lastClickTime = 0;
-var clickSequence = [];
+var echoSequence = [];
 var clickTimestamps = [0];
 
 //simon functionality variables
 var clickCount = 0;
 var gameOver = false;
 var simonSequence = [];
+
+/*
+Mode Buttons
+These allow the user to select the noteboxes' mode (echo or simon).
+ */
+var simonButton = document.getElementById('simon_mode');
+var echoButton = document.getElementById('echo_mode');
+
+simonButton.addEventListener('click', function() {
+	simonButton.style.border = '1px solid white';
+	echoButton.style.border = 'none';
+	simonEnabled = true;
+	echoEnabled = false;
+	simonSequence = [];
+    console.log("lastClickTime = " + lastClickTime
+        + ", echoSequence = " + echoSequence
+        + ", clickTimeStamps: " + clickTimestamps);
+	simon();
+});
+
+echoButton.addEventListener('click', function() {
+    echoButton.style.border = '1px solid white';
+    simonButton.style.border = 'none';
+    simonEnabled = false;
+    echoEnabled = true;
+    console.log("lastClickTime = " + lastClickTime
+        + ", echoSequence = " + echoSequence
+        + ", clickTimeStamps: " + clickTimestamps);
+    if(!echoCalled) echo();
+});
 
 
 // NoteBox
@@ -72,24 +103,24 @@ function NoteBox(key, onClick) {
         this.onClick(this.key);
         this.play();
 
-        if (echoEnabled == true) {
+        if (echoEnabled === true) {
         lastClickTime = new Date();
         clickTimestamps.push(lastClickTime);
-        clickSequence.push(this.key);
+        echoSequence.push(this.key);
     	}
 
-    	else if(simonEnabled == true){
+    	if(simonEnabled === true){
         	clickCount++;
-            if(this.key != simonSequence[clickCount - 1]){
+            if(this.key !== simonSequence[clickCount - 1]){
             	gameOver = true;
                 clickCount = 0;
-                clickSequence = [];
+                // echoSequence = [];
             	simonSequence = [];
             	setTimeout(simon, 100);
             }
-            else if(clickCount == simonSequence.length){
+            else if(clickCount === simonSequence.length){
                 clickCount = 0;
-                clickSequence = [];
+                // echoSequence = [];
                 setTimeout(simon, 2500);
 			}
 		}
@@ -120,13 +151,19 @@ KEYS.forEach(function (key) {
  @returns: none
  */
 function echo() {
+    echoCalled = true;
+    var keepWaiting = setTimeout(echo, 2);
     //waits until 2.5 seconds have passed since user's last click
-    if((new Date() - lastClickTime > delayBeforeEchoesStart) && lastClickTime != 0) {
-        disableAllNoteboxes();
-        playEchoSequence();
+    if((new Date() - lastClickTime > DELAY_BEFORE_ECHO) && lastClickTime != 0) {
+        clearTimeout(keepWaiting);
+    	console.log(clickTimestamps);
+    	playEchoSequence();
     }
     //if 2.5 seconds has not passed since last click, keep waiting
-    else setTimeout(echo, 5);
+    // else{
+    // 	var keepWaiting = setTimeout(echo, 5);
+    // 	keepWaiting();
+    // }
 }
 
 /*
@@ -151,35 +188,44 @@ function enableAllNoteboxes() {
 This function plays the sequence of notes clicked on by the user.
  */
 function playEchoSequence() {
-
-    if(clickSequence == undefined || clickSequence.length == 0){
+    disableAllNoteboxes();
+    if(echoSequence === undefined || echoSequence.length === 0){
         lastClickTime = 0;
-        clickTimestamps = [];
-        clickTimestamps.push(lastClickTime);
+        clickTimestamps = [0];
         enableAllNoteboxes();
         echo();
     }
     else{
-        var currentNote  = clickSequence.shift();
-        clickTimestamps.shift();
+        var currentNote = echoSequence.shift();
         notes[currentNote].play();
+        clickTimestamps.shift();
         setTimeout(playEchoSequence, clickTimestamps[1] - clickTimestamps[0]);
     }
+
+//     disableAllNoteboxes();
+//     echoSequence.forEach(function(key, i) {
+//         clickTimestamps.shift();
+//         setTimeout(notes[key].play.bind(null, key), clickTimestamps[1] - clickTimestamps[0]);
+// });
+// 	var endIndex = echoSequence.length;
+//     //enable all noteboxes to accept user clicks after simon sequence has finished playing
+//     setTimeout(resetEcho, echoSequence[endIndex] - echoSequence[0]);
+
 }
 
 
 function simon() {
 
 	/*
-	 - pick random note from KEYS array and append it to clickSequence
+	 - pick random note from KEYS array and append it to echoSequence
 	 - disable noteboxes and play sequence
 	 - have counter for number of times a user has clicked
-	 - each time user clicks, compare clicked note to corresponding index in clickSequence
-	 - if played key != clickSequence[i], game over: reset arrays, restart game
-	 - if user's click count == clickSequence.length, go back to beginning step
+	 - each time user clicks, compare clicked note to corresponding index in echoSequence
+	 - if played key != echoSequence[i], game over: reset arrays, restart game
+	 - if user's click count == echoSequence.length, go back to beginning step
 	 */
 
-    if(gameOver == true){
+    if(gameOver === true){
         alert("G A M E   O V E R");
         gameOver = false;
     }
@@ -189,11 +235,11 @@ function simon() {
 
 
 function playSimonSequence() {
-	disableAllNoteboxes();
-	simonSequence.forEach(function(key, i) {
- 	setTimeout(notes[key].play.bind(null, key), i * NOTE_DURATION);
-});
-	//enable all noteboxes to accept user clicks after simon sequence has finished playing
+    disableAllNoteboxes();
+    simonSequence.forEach(function(key, i) {
+        setTimeout(notes[key].play.bind(null, key), i * NOTE_DURATION);
+    });
+    //enable all noteboxes to accept user clicks after simon sequence has finished playing
     setTimeout(enableAllNoteboxes, simonSequence.length * NOTE_DURATION);
 }
 
@@ -205,6 +251,4 @@ function randomNote(){
 	return KEYS[randomIndex];
 }
 
-if(echoEnabled == true) echo();
-else if(simonEnabled == true) simon();
 

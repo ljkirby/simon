@@ -3,6 +3,8 @@
 <head>
 	<title>Simon</title>
 	<link rel="stylesheet" href="/css/simon.css" />
+	<link href="https://fonts.googleapis.com/css?family=Indie+Flower|Open+Sans+Condensed:300|Titillium+Web" rel="stylesheet">
+
 </head>
 <body>
 	<!-- Links to audio files for C-F notes -->
@@ -26,6 +28,11 @@
 		<source src="/media/f_note.ogg" type="audio/ogg"></source>
 		<source src="/media/f_note.wav" type="audio/wav"></source>
 	</audio>
+	<!--Mode Buttons-->
+	<div id="button-modes">
+		<button id = "simon_mode">SIMON MODE</button>
+		<button id = "echo_mode">ECHO MODE</button>
+	</div>
 	<!-- Note boxes -->
 	<div id="simon">
 		<div id="c" class="note-box"></div>
