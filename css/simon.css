@@ -10,6 +10,10 @@ html, body {
     top:30%;
 }
 
+#normal_mode{
+    border: 1px solid white;
+}
+
 button {
     font-family: 'Titillium Web', sans-serif;
     background-color: transparent;

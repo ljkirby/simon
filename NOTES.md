@@ -1,7 +1,7 @@
 
 RUNNING THE PROGRAM:
 
-- start an HTTP server in the root directory. Both the simon and echo
+- Start an HTTP server in the root directory. Both the simon and echo
 functionalities are accessible through buttons built into the UI.
 
 --------------------------------------------------------------------
@@ -20,7 +20,7 @@ simon and echo functions - an approach that I understand has room for improvemen
 
 ----------------------------------------------------------------------
 
-ECHO Functionality:
+ECHO FUNCTIONALITY:
 
 - I actually found that implementing this functionality was more challenging than
 implementing the Simon game - since it was classified as the 'easy' task,
@@ -42,7 +42,7 @@ to the the ASYNCHRONOUS execution of functions like setTimeout().
 
 ---------------------------------------------------------------------
 
-SIMON Functionality:
+SIMON FUNCTIONALITY:
 
 - The simon functionality was fairly easy to implement. I copied the given
 example of playing all notes in an array and used it to play back all the

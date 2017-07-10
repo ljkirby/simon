@@ -22,11 +22,21 @@ var simonSequence = [];
 Mode Buttons
 These allow the user to select the noteboxes' mode (echo or simon).
  */
+var normalButton = document.getElementById('normal_mode');
 var simonButton = document.getElementById('simon_mode');
 var echoButton = document.getElementById('echo_mode');
 
+normalButton.addEventListener('click', function() {
+    normalButton.style.border = '1px solid white';
+    echoButton.style.border = 'none';
+    simonButton.style.border = 'none';
+    simonEnabled = false;
+    echoEnabled = false;
+});
+
 simonButton.addEventListener('click', function() {
 	simonButton.style.border = '1px solid white';
+    normalButton.style.border = 'none';
 	echoButton.style.border = 'none';
 	simonEnabled = true;
 	echoEnabled = false;
@@ -36,6 +46,7 @@ simonButton.addEventListener('click', function() {
 
 echoButton.addEventListener('click', function() {
     echoButton.style.border = '1px solid white';
+    normalButton.style.border = 'none';
     simonButton.style.border = 'none';
     simonEnabled = false;
     echoEnabled = true;
@@ -217,12 +228,20 @@ function simon() {
     var playSimonSequence = function() {
         //disable all noteboxes while the simon sequence is playing
         disableAllNoteboxes();
+        //array to store note timers
+        var timers = [];
         //play out each note in the simon sequence
         simonSequence.forEach(function(key, i) {
-            setTimeout(notes[key].play.bind(null, key), i * NOTE_DURATION);
+            timers[i] = setTimeout(notes[key].play.bind(null, key), i * NOTE_DURATION);
         });
         //enable all noteboxes to accept user clicks after simon sequence has finished playing
         setTimeout(enableAllNoteboxes, simonSequence.length * NOTE_DURATION);
+        //prevents simon sequence from playing if user
+        //switches functionalities before sequence begins playing
+        if(simonEnabled === false){
+            enableAllNoteboxes();
+            for(var i=0; i<timers.length; i++) clearTimeout(timers[i]);
+        }
     }
 
     simonSequence.push(randomNote());
