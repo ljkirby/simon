@@ -1,4 +1,11 @@
 
+RUNNING THE PROGRAM:
+
+- start an HTTP server in the root directory. Both the simon and echo
+functionalities are accessible through buttons built into the UI.
+
+--------------------------------------------------------------------
+
 IF I WERE TO RE-DO THIS INTERVIEW:
 
 I would take a more object oriented approach to the Simon and Echo
@@ -18,7 +25,7 @@ ECHO Functionality:
 - I actually found that implementing this functionality was more challenging than
 implementing the Simon game - since it was classified as the 'easy' task,
 I know that there is probably a much much easier way of successfully getting
-this mode to work, and I love to find out what the creator of this interview
+this mode to work, and I would love to find out what the creator of this interview
 had in mind when assigning the easy task
 
 - I wasn't sure if this was a requirement, so I think it may be worth
