@@ -31,9 +31,6 @@ simonButton.addEventListener('click', function() {
 	simonEnabled = true;
 	echoEnabled = false;
 	simonSequence = [];
-    console.log("lastClickTime = " + lastClickTime
-        + ", echoSequence = " + echoSequence
-        + ", clickTimeStamps: " + clickTimestamps);
 	simon();
 });
 
@@ -42,9 +39,8 @@ echoButton.addEventListener('click', function() {
     simonButton.style.border = 'none';
     simonEnabled = false;
     echoEnabled = true;
-    console.log("lastClickTime = " + lastClickTime
-        + ", echoSequence = " + echoSequence
-        + ", clickTimeStamps: " + clickTimestamps);
+    //prevents echo() from being called multiple times if user
+    //clicks "ECHO MODE" more than once
     if(!echoCalled) echo();
 });
 
@@ -107,20 +103,19 @@ function NoteBox(key, onClick) {
         lastClickTime = new Date();
         clickTimestamps.push(lastClickTime);
         echoSequence.push(this.key);
-    	}
+         }
 
+        // - each time user clicks, compare clicked note to corresponding index in echoSequence
+        // - if played key != echoSequence[i], game over: restart game
+        // - if user's click count == echoSequence.length, go back to beginning step
     	if(simonEnabled === true){
         	clickCount++;
             if(this.key !== simonSequence[clickCount - 1]){
             	gameOver = true;
-                clickCount = 0;
-                // echoSequence = [];
-            	simonSequence = [];
             	setTimeout(simon, 100);
             }
             else if(clickCount === simonSequence.length){
                 clickCount = 0;
-                // echoSequence = [];
                 setTimeout(simon, 2500);
 			}
 		}
@@ -140,34 +135,7 @@ KEYS.forEach(function (key) {
 });
 
 /*
- This function 'echoes' a clicked note
- after a 2500 ms delay. If the user plays multiple
- notes within 2500 ms, the program will wait until
- the user stops clicking for at least 2500 ms, and
- then will echo the sequence and timing of the notes
- that they played.
-
- @param: none
- @returns: none
- */
-function echo() {
-    echoCalled = true;
-    var keepWaiting = setTimeout(echo, 2);
-    //waits until 2.5 seconds have passed since user's last click
-    if((new Date() - lastClickTime > DELAY_BEFORE_ECHO) && lastClickTime != 0) {
-        clearTimeout(keepWaiting);
-    	console.log(clickTimestamps);
-    	playEchoSequence();
-    }
-    //if 2.5 seconds has not passed since last click, keep waiting
-    // else{
-    // 	var keepWaiting = setTimeout(echo, 5);
-    // 	keepWaiting();
-    // }
-}
-
-/*
-This function stops the Noteboxes from playing when clicked by the user.
+ This function stops the Noteboxes from playing when clicked by the user.
  */
 function disableAllNoteboxes() {
     KEYS.forEach(function (key) {
@@ -176,7 +144,7 @@ function disableAllNoteboxes() {
 }
 
 /*
- This function enables the noteboxes to play when clicked by the user.
+ This function enables the Noteboxes to play when clicked by the user.
  */
 function enableAllNoteboxes() {
     KEYS.forEach(function (key) {
@@ -185,70 +153,80 @@ function enableAllNoteboxes() {
 }
 
 /*
-This function plays the sequence of notes clicked on by the user.
+ This function 'echoes' a clicked note
+ after a 2500 ms delay. If the user plays multiple
+ notes within 2500 ms, the program will wait until
+ the user stops clicking for at least 2500 ms, and
+ then will echo the sequence and timing of the notes
+ that they played.
  */
-function playEchoSequence() {
-    disableAllNoteboxes();
-    if(echoSequence === undefined || echoSequence.length === 0){
-        lastClickTime = 0;
-        clickTimestamps = [0];
-        enableAllNoteboxes();
-        echo();
+function echo() {
+    echoCalled = true;
+    var keepWaiting = setTimeout(echo, 10);
+    var playEchoSequence = function() {
+        disableAllNoteboxes();
+        //if done playing echo sequence, reset all variables, re-enable all
+        // noteboxes, and keep
+        // checking for user input by calling echo()
+        if(echoSequence === undefined || echoSequence.length === 0){
+            lastClickTime = 0;
+            clickTimestamps = [0];
+            enableAllNoteboxes();
+            echo();
+        }
+        else{
+            //set a timer to play note at the beginning of echoSequence
+            //shift echosequence so that on next call, next note will be
+            //at the beginning of echoSequence and will be played
+            var currentNote = echoSequence.shift();
+            notes[currentNote].play();
+            //use the difference in click times to set the delay before each
+            //note is played - shift clickTimestamps to match shift in echoSequence
+            clickTimestamps.shift();
+            setTimeout(playEchoSequence, clickTimestamps[1] - clickTimestamps[0]);
+        }
     }
-    else{
-        var currentNote = echoSequence.shift();
-        notes[currentNote].play();
-        clickTimestamps.shift();
-        setTimeout(playEchoSequence, clickTimestamps[1] - clickTimestamps[0]);
+    //waits until 2.5 seconds have passed since user's last click
+    if((new Date() - lastClickTime > DELAY_BEFORE_ECHO) && lastClickTime != 0) {
+        clearTimeout(keepWaiting);
+    	playEchoSequence();
     }
-
-//     disableAllNoteboxes();
-//     echoSequence.forEach(function(key, i) {
-//         clickTimestamps.shift();
-//         setTimeout(notes[key].play.bind(null, key), clickTimestamps[1] - clickTimestamps[0]);
-// });
-// 	var endIndex = echoSequence.length;
-//     //enable all noteboxes to accept user clicks after simon sequence has finished playing
-//     setTimeout(resetEcho, echoSequence[endIndex] - echoSequence[0]);
-
-}
-
-
-function simon() {
-
-	/*
-	 - pick random note from KEYS array and append it to echoSequence
-	 - disable noteboxes and play sequence
-	 - have counter for number of times a user has clicked
-	 - each time user clicks, compare clicked note to corresponding index in echoSequence
-	 - if played key != echoSequence[i], game over: reset arrays, restart game
-	 - if user's click count == echoSequence.length, go back to beginning step
-	 */
-
-    if(gameOver === true){
-        alert("G A M E   O V E R");
-        gameOver = false;
-    }
-    simonSequence.push(randomNote());
-    playSimonSequence();
-}
-
-
-function playSimonSequence() {
-    disableAllNoteboxes();
-    simonSequence.forEach(function(key, i) {
-        setTimeout(notes[key].play.bind(null, key), i * NOTE_DURATION);
-    });
-    //enable all noteboxes to accept user clicks after simon sequence has finished playing
-    setTimeout(enableAllNoteboxes, simonSequence.length * NOTE_DURATION);
 }
 
 /*
-This function returns a random note from the KEYS array.
+This function launches a game of simon in which the user must
+copy a randomly generated sequence of notes that increases in
+length each level.
  */
-function randomNote(){
-	var randomIndex = Math.floor(Math.random() * KEYS.length);
-	return KEYS[randomIndex];
+function simon() {
+    if(gameOver === true){
+        //reset simon sequence and level, alert the user that the game is over
+        //and restart the game automatically
+        clickCount = 0;
+        simonSequence = [];
+        alert("G A M E   O V E R! \nPress OK to play again.");
+        gameOver = false;
+    }
+
+    //returns a random note from the KEYS array
+    var randomNote = function() {
+        var randomIndex = Math.floor(Math.random() * KEYS.length);
+        return KEYS[randomIndex];
+    }
+
+    var playSimonSequence = function() {
+        //disable all noteboxes while the simon sequence is playing
+        disableAllNoteboxes();
+        //play out each note in the simon sequence
+        simonSequence.forEach(function(key, i) {
+            setTimeout(notes[key].play.bind(null, key), i * NOTE_DURATION);
+        });
+        //enable all noteboxes to accept user clicks after simon sequence has finished playing
+        setTimeout(enableAllNoteboxes, simonSequence.length * NOTE_DURATION);
+    }
+
+    simonSequence.push(randomNote());
+    playSimonSequence();
 }
 
 
